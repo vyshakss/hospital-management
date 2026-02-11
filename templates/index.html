@@ -1,25 +1,320 @@
 <!DOCTYPE html>
-<html>
-<body>
-    <h1>Hospital Registration</h1>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hospital Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 1. THEME VARIABLES --- */
+        :root {
+            /* Light Mode (Default) */
+            --bg-color: #f0f2f5;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+            --header-color: #007bff;
+            --shadow: rgba(0,0,0,0.1);
+            --toggle-bg: #333;
+        }
 
-    <form action="/submit" method="POST">
-        <label>Patient Name:</label>
-        <input type="text" name="patient_name" required>
-        <br><br>
-        <label>Patient Age:</label>
-        <input type="number" name="patient_age" required>
-        <br><br>
-        <button type="submit">Register Patient</button>
-    </form>
-   <form action="/get_data" method="GET">
-     <button type="submit" style="background-color: #4CAF50; color: white; padding: 10px;">
-            Show All Records
-        </button>
-    </form>
-  <br>
-<label>System Output:</label><br>
-    <textarea readonly style="width: 400px; height: 150px;">{{ msg }}</textarea>
+        [data-theme="dark"] {
+            /* Dark Mode Overrides */
+            --bg-color: #18191a;
+            --text-color: #e4e6eb;
+            --card-bg: #242526;
+            --input-bg: #3a3b3c;
+            --input-border: #3a3b3c;
+            --header-color: #4dabf7;
+            --shadow: rgba(0,0,0,0.5);
+            --toggle-bg: #f0f2f5;
+        }
+
+        /* --- 2. GENERAL STYLING --- */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            padding: 0; margin: 0;
+            display: flex; justify-content: center; min-height: 100vh;
+        }
+
+        .container {
+            width: 100%; max-width: 600px;
+            margin-top: 40px; margin-bottom: 40px;
+            position: relative;
+        }
+
+        /* --- 3. HEADER --- */
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: var(--header-color); margin: 0; font-size: 28px; }
+        .header p { color: var(--text-color); opacity: 0.7; margin-top: 5px; }
+
+        /* --- 4. TOGGLE SWITCH (Bottom Right) --- */
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 60px;
+            height: 30px;
+            background: var(--toggle-bg);
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: background 0.3s;
+        }
+
+        .theme-toggle::after {
+            content: '';
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        [data-theme="dark"] .theme-toggle::after {
+            transform: translateX(30px);
+        }
+        
+        .toggle-icon { font-size: 14px; line-height: 1; user-select: none; }
+
+        /* --- 5. CARDS & INPUTS --- */
+        .menu-box, .form-box {
+            background: var(--card-bg);
+            padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow);
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .form-box { display: none; padding: 30px; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h3 { margin-top: 0; color: var(--text-color); border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
+        h4 { color: var(--text-color); }
+        label { font-weight: 600; font-size: 14px; margin-top: 15px; display: block; color: var(--text-color); }
+
+        input, select {
+            width: 100%; padding: 10px; margin-top: 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus { border-color: var(--header-color); outline: none; }
+
+        /* --- 6. BUTTONS --- */
+        button {
+            width: 100%; padding: 12px; border: none; border-radius: 6px;
+            font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; margin-top: 10px; }
+        .btn-danger { background-color: #dc3545; color: white; width: auto; padding: 8px 15px; float: right; margin-top: 0; }
+
+        /* --- 7. UTILS --- */
+        .delete-section {
+            margin-top: 30px; padding-top: 20px;
+            border-top: 2px dashed var(--input-border);
+        }
+        .delete-input-group { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+        
+        .output-area {
+            background: #2d2d2d; color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 15px; border-radius: 8px; margin-top: 20px;
+        }
+        textarea { width: 100%; height: 120px; background: transparent; border: none; color: inherit; resize: none; outline: none; }
+    </style>
+
+    <script>
+        // 1. Toggle Function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            
+            if (current === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // 2. Load Saved Preference
+        function loadTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        // 3. Section Logic
+        function showSection() {
+            document.getElementById('patient-section').style.display = 'none';
+            document.getElementById('doctor-section').style.display = 'none';
+            document.getElementById('bill-section').style.display = 'none';
+            document.getElementById('admission-section').style.display = 'none'; // NEW LINE
+            
+            var mode = document.getElementById('menu').value;
+            document.getElementById(mode + '-section').style.display = 'block';
+        }
+
+        window.onload = function() {
+            loadTheme(); // Load theme first
+            
+            var lastMode = "{{ mode }}";
+            if(lastMode) {
+                document.getElementById('menu').value = lastMode;
+                showSection();
+            } else {
+                document.getElementById('patient-section').style.display = 'block';
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+        <span class="toggle-icon">☀️</span>
+        <span class="toggle-icon">🌙</span>
+    </button>
+
+<div class="container">
+    
+    <div class="header">
+        <h1>🏥 City Hospital</h1>
+        <p>Management System Dashboard</p>
+    </div>
+
+    <div class="menu-box">
+        <label>Select Category to Manage:</label>
+        <select id="menu" onchange="showSection()">
+            <option value="patient">Patients</option>
+            <option value="doctor">Doctors</option>
+            <option value="bill">Bills</option>
+            <option value="admission">Admissions</option> </select>
+    </div>
+
+    <div id="patient-section" class="form-box">
+        <h3>Add New Patient</h3>
+        <form action="/submit_patient" method="POST">
+            <label>First Name:</label> <input type="text" name="first_name" placeholder="Ex: Tony" required>
+            <label>Last Name:</label> <input type="text" name="last_name" placeholder="Ex: Stark" required>
+            <label>Date of Birth:</label> <input type="date" name="dob" required>
+            <label>Address:</label> <input type="text" name="address" placeholder="Ex: 10880 Malibu Point" required>
+            <label>Phone Number:</label> <input type="text" name="phone" placeholder="Ex: 555-0199" required>
+            <button type="submit" class="btn-primary">Register Patient</button>
+        </form>
+
+        <form action="/get_patients" method="GET">
+            <button type="submit" class="btn-success">View All Patients</button>
+        </form>
+
+        <div class="delete-section">
+            <h4 style="color: #dc3545; margin-bottom: 5px;">Remove Patient</h4>
+            <form action="/delete_patient" method="POST" class="delete-input-group">
+                <input type="number" name="delete_id" placeholder="ID to delete" style="flex: 1;" required>
+                <button type="submit" class="btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+    <div id="admission-section" class="form-box">
+        <h3>New Admission</h3>
+        <form action="/submit_admission" method="POST">
+            <label>Patient ID:</label> 
+            <input type="number" name="patient_id" placeholder="ID from Patient List" required>
+            
+            <label>Diagnosis:</label> 
+            <input type="text" name="diagnosis" placeholder="Ex: Viral Fever" required>
+            
+            <label>Expected Discharge Date (Optional):</label> 
+            <input type="date" name="discharge_date">
+            
+            <button type="submit" class="btn-primary">Admit Patient</button>
+        </form>
+
+        <form action="/get_admissions" method="GET">
+            <button type="submit" class="btn-success">View All Admissions</button>
+        </form>
+    </div>
+
+    <div id="doctor-section" class="form-box">
+        <h3>Add New Doctor</h3>
+        <form action="/submit_doctor" method="POST">
+            <label>Doctor Name:</label> <input type="text" name="doc_name" placeholder="Ex: Dr. Stephen Strange" required>
+            <label>Specialization:</label> <input type="text" name="specialization" placeholder="Ex: Neurosurgery" required>
+            <button type="submit" class="btn-primary">Register Doctor</button>
+        </form>
+
+        <form action="/get_doctors" method="GET">
+            <button type="submit" class="btn-success">View All Doctors</button>
+        </form>
+        
+        <div class="delete-section">
+            <h4 style="color: #dc3545; margin-bottom: 5px;">Remove Doctor</h4>
+            <form action="/delete_doctor" method="POST" class="delete-input-group">
+                <input type="number" name="delete_id" placeholder="ID to delete" style="flex: 1;" required>
+                <button type="submit" class="btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+    
+
+    <div id="bill-section" class="form-box">
+        <h3>Create New Bill</h3>
+        <form action="/submit_bill" method="POST">
+            <label>Patient ID:</label> <input type="number" name="patient_id" placeholder="Check Patient list for ID" required>
+            <label>Amount ($):</label> <input type="number" name="amount" placeholder="0.00" step="0.01" required>
+            <label>Status:</label> 
+            <select name="status">
+                <option value="Unpaid">Unpaid</option>
+                <option value="Paid">Paid</option>
+            </select>
+            <button type="submit" class="btn-primary">Generate Bill</button>
+        </form>
+
+        <form action="/get_bills" method="GET">
+            <button type="submit" class="btn-success">View All Bills</button>
+        </form>
+
+        <div class="delete-section" style="border-color: #007bff;">
+            <h4 style="color: #007bff; margin-bottom: 5px;">Update Bill Status</h4>
+            <form action="/update_bill" method="POST" class="delete-input-group">
+                <input type="number" name="bill_id" placeholder="Bill ID" style="flex: 1;" required>
+                <select name="new_status" style="flex: 1; margin: 0;">
+                    <option value="Paid">Paid</option>
+                    <option value="Unpaid">Unpaid</option>
+                </select>
+                <button type="submit" class="btn-primary" style="width: auto; margin: 0; background-color: #007bff;">Update</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="output-area">
+        <label style="color: #ccc; font-size: 12px; margin: 0;">SYSTEM LOG:</label>
+        <textarea readonly>{{ msg }}</textarea>
+    </div>
+
+</div>
 
 </body>
 </html>
