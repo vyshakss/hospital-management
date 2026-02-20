@@ -2,146 +2,564 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hospital Management</title>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         /* --- 1. THEME VARIABLES --- */
         :root {
             /* Light Mode (Default) */
-            --bg-color: #f0f2f5;
-            --text-color: #333;
+            --bg-color: #f5f7fa;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-color: #2d3748;
+            --text-secondary: #718096;
             --card-bg: #ffffff;
-            --input-bg: #ffffff;
-            --input-border: #ccc;
-            --header-color: #007bff;
-            --shadow: rgba(0,0,0,0.1);
-            --toggle-bg: #333;
+            --input-bg: #f7fafc;
+            --input-border: #e2e8f0;
+            --input-focus: #667eea;
+            --header-color: #667eea;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --toggle-bg: #cbd5e0;
+            --success: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --info: #4299e1;
         }
 
         [data-theme="dark"] {
             /* Dark Mode Overrides */
-            --bg-color: #18191a;
-            --text-color: #e4e6eb;
-            --card-bg: #242526;
-            --input-bg: #3a3b3c;
-            --input-border: #3a3b3c;
-            --header-color: #4dabf7;
-            --shadow: rgba(0,0,0,0.5);
-            --toggle-bg: #f0f2f5;
+            --bg-color: #0d0f1a;
+            --bg-gradient: linear-gradient(135deg, #5b4fb5 0%, #7c3aed 100%);
+            --text-color: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --card-bg: #1a1d2e;
+            --input-bg: #0f1219;
+            --input-border: #2d3548;
+            --input-focus: #7c3aed;
+            --header-color: #7c3aed;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.6);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.7);
+            --toggle-bg: #4a5568;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
         }
 
         /* --- 2. GENERAL STYLING --- */
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
-            padding: 0; margin: 0;
-            display: flex; justify-content: center; min-height: 100vh;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .container {
-            width: 100%; max-width: 600px;
-            margin-top: 40px; margin-bottom: 40px;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
             position: relative;
         }
 
-        /* --- 3. HEADER --- */
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { color: var(--header-color); margin: 0; font-size: 28px; }
-        .header p { color: var(--text-color); opacity: 0.7; margin-top: 5px; }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: var(--bg-gradient);
+            z-index: 0;
+            opacity: 0.95;
+        }
 
-        /* --- 4. TOGGLE SWITCH (Bottom Right) --- */
+        .container {
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 20px 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logout-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999;
+        }
+
+        /* --- 3. HEADER --- */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-icon {
+            width: 48px;
+            height: 48px;
+            display: inline-block;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+            flex-shrink: 0;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            line-height: 1.2;
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            margin-top: 4px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* --- 4. TOGGLE SWITCH --- */
         .theme-toggle {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 30px;
+            right: 30px;
             z-index: 1000;
-            width: 60px;
-            height: 30px;
-            background: var(--toggle-bg);
-            border-radius: 30px;
+            width: 56px;
+            height: 56px;
+            background: var(--card-bg);
+            border-radius: 50%;
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: background 0.3s;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s ease;
+            font-size: 24px;
         }
 
-        .theme-toggle::after {
-            content: '';
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            transition: transform 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        [data-theme="dark"] .theme-toggle {
+            background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
         }
 
-        [data-theme="dark"] .theme-toggle::after {
-            transform: translateX(30px);
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
         }
-        
-        .toggle-icon { font-size: 14px; line-height: 1; user-select: none; }
 
-        /* --- 5. CARDS & INPUTS --- */
+        [data-theme="dark"] .theme-toggle:hover {
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.5);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .toggle-icon {
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .toggle-icon.active {
+            display: block;
+            animation: rotate 0.5s ease;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(-180deg); opacity: 0; }
+            to { transform: rotate(0); opacity: 1; }
+        }
+
+        /* --- 5. TAB NAVIGATION --- */
+        .tab-navigation {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px;
+            border-radius: 50px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            display: flex;
+            gap: 4px;
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        [data-theme="dark"] .tab-navigation {
+            background: rgba(26, 29, 46, 0.95);
+            border: 3px solid rgba(45, 53, 72, 0.5);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        [data-theme="dark"] .tab-button {
+            color: #94a3b8;
+        }
+
+        .tab-button:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.08);
+            color: var(--text-color);
+        }
+
+        .tab-button.active {
+            background: #6366f1;
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        [data-theme="dark"] .tab-button.active {
+            background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        .tab-icon {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+        }
+
+        /* --- 6. CARDS & INPUTS --- */
         .menu-box, .form-box {
             background: var(--card-bg);
-            padding: 20px; border-radius: 12px;
-            box-shadow: 0 4px 15px var(--shadow);
-            margin-bottom: 20px;
-            transition: background 0.3s;
+            padding: 28px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
         }
-        .form-box { display: none; padding: 30px; animation: fadeIn 0.5s; }
+
+        [data-theme="dark"] .menu-box,
+        [data-theme="dark"] .form-box {
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .menu-box:hover, .form-box:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .form-box {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        h3 { margin-top: 0; color: var(--text-color); border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; }
-        h4 { color: var(--text-color); }
-        label { font-weight: 600; font-size: 14px; margin-top: 15px; display: block; color: var(--text-color); }
+        h3 {
+            margin: 0 0 24px 0;
+            color: var(--text-color);
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 16px;
+            border-left: 4px solid var(--header-color);
+        }
+
+        h4 {
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-weight: 500;
+            font-size: 14px;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--text-color);
+            letter-spacing: 0.2px;
+        }
 
         input, select {
-            width: 100%; padding: 10px; margin-top: 5px;
-            background-color: var(--input-bg);
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 2px solid var(--input-border);
+            background: var(--input-bg);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
             color: var(--text-color);
-            border: 1px solid var(--input-border);
-            border-radius: 6px;
-            box-sizing: border-box;
+            transition: all 0.3s ease;
+            outline: none;
         }
-        input:focus, select:focus { border-color: var(--header-color); outline: none; }
 
-        /* --- 6. BUTTONS --- */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] select:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(159, 122, 234, 0.15);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 16px 18px;
+            border-radius: 10px;
+            border: 2px solid var(--input-border);
+            background: var(--input-bg);
+            font-size: 14px;
+            line-height: 1.8;
+            font-family: 'SF Mono', 'Courier New', Courier, monospace;
+            color: var(--text-color);
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--input-focus);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
         button {
-            width: 100%; padding: 12px; border: none; border-radius: 6px;
-            font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn-primary { background-color: #007bff; color: white; }
-        .btn-success { background-color: #28a745; color: white; margin-top: 10px; }
-        .btn-danger { background-color: #dc3545; color: white; width: auto; padding: 8px 15px; float: right; margin-top: 0; }
 
-        /* --- 7. UTILS --- */
-        .delete-section {
-            margin-top: 30px; padding-top: 20px;
-            border-top: 2px dashed var(--input-border);
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+            color: white;
         }
-        .delete-input-group { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
-        
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5558e3 0%, #6d28d9 100%);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: transparent;
+            color: var(--success);
+            border: 2px solid var(--success);
+        }
+
+        .btn-success:hover {
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            width: auto;
+            padding: 14px 20px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+        }
+
         .output-area {
-            background: #2d2d2d; color: #00ff00;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 15px; border-radius: 8px; margin-top: 20px;
+            margin-top: 32px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--input-border);
+            box-shadow: var(--shadow-sm);
         }
-        textarea { width: 100%; height: 120px; background: transparent; border: none; color: inherit; resize: none; outline: none; }
+
+        .output-area label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .delete-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px dashed var(--input-border);
+            border-radius: 0;
+        }
+
+        .delete-section h4 {
+            color: var(--danger);
+        }
+
+        .delete-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .delete-input-group button {
+            width: auto;
+            margin: 0;
+            padding: 14px 24px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge-success {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--success);
+        }
+
+        .badge-danger {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--danger);
+        }
+        
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .container {
+                padding: 80px 16px 40px 16px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .header-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .tab-navigation {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tab-button {
+                min-width: 120px;
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+            
+            .logout-button {
+                top: 16px;
+                right: 16px;
+            }
+            
+            .theme-toggle {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 
     <script>
@@ -149,7 +567,7 @@
         function toggleTheme() {
             const html = document.documentElement;
             const current = html.getAttribute('data-theme');
-            
+
             if (current === 'dark') {
                 html.setAttribute('data-theme', 'light');
                 localStorage.setItem('theme', 'light');
@@ -157,160 +575,379 @@
                 html.setAttribute('data-theme', 'dark');
                 localStorage.setItem('theme', 'dark');
             }
+            updateThemeIcon();
         }
 
-        // 2. Load Saved Preference
-        function loadTheme() {
-            const saved = localStorage.getItem('theme');
-            if (saved === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
+        // 2. Update Theme Icon
+        function updateThemeIcon() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+
+            if (isDark) {
+                sunIcon.classList.remove('active');
+                moonIcon.classList.add('active');
+            } else {
+                moonIcon.classList.remove('active');
+                sunIcon.classList.add('active');
             }
         }
 
-        // 3. Section Logic
-        function showSection() {
-            document.getElementById('patient-section').style.display = 'none';
-            document.getElementById('doctor-section').style.display = 'none';
-            document.getElementById('bill-section').style.display = 'none';
-            document.getElementById('admission-section').style.display = 'none'; // NEW LINE
-            
-            var mode = document.getElementById('menu').value;
-            document.getElementById(mode + '-section').style.display = 'block';
+        // 3. Load Saved Preference
+        function loadTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+            } else {
+                // Default to dark theme
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            updateThemeIcon();
+        }
+
+        // 4. Tab Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            // Add 'master-section' to this list
+            const sections = ['patient-section', 'doctor-section', 'bill-section', 'admission-section', 'master-section'];
+            sections.forEach(sectionId => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+
+            // Add active class to selected tab
+            const activeTab = document.querySelector(`[data-section="${sectionName}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+
+            // Save preference
+            localStorage.setItem('activeTab', sectionName);
         }
 
         window.onload = function() {
-            loadTheme(); // Load theme first
-            
-            var lastMode = "{{ mode }}";
-            if(lastMode) {
-                document.getElementById('menu').value = lastMode;
-                showSection();
-            } else {
-                document.getElementById('patient-section').style.display = 'block';
-            }
+            loadTheme();
+
+            // Load last active tab or default to patient
+            const lastTab = localStorage.getItem('activeTab') || 'patient';
+            showSection(lastTab);
         }
     </script>
 </head>
 <body>
 
     <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme">
-        <span class="toggle-icon">☀️</span>
-        <span class="toggle-icon">🌙</span>
+        <span id="sun-icon" class="toggle-icon active">☀️</span>
+        <span id="moon-icon" class="toggle-icon">🌙</span>
     </button>
 
-<div class="container">
-    
-    <div class="header">
-        <h1>🏥 City Hospital</h1>
-        <p>Management System Dashboard</p>
+    <div class="logout-button">
+        <a href="/logout" style="text-decoration: none;">
+            <button class="btn-danger" style="width: auto; padding: 10px 16px; font-size: 14px; margin: 0;">
+                Logout ➜
+            </button>
+        </a>
     </div>
 
-    <div class="menu-box">
-        <label>Select Category to Manage:</label>
-        <select id="menu" onchange="showSection()">
-            <option value="patient">Patients</option>
-            <option value="doctor">Doctors</option>
-            <option value="bill">Bills</option>
-            <option value="admission">Admissions</option> </select>
+<div class="container">
+
+    <div class="header">
+        <svg class="header-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+        <div class="header-content">
+            <h1>City Hospital</h1>
+            <p>Management System Dashboard</p>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+        <button class="tab-button active" data-section="patient" onclick="showSection('patient')">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <span>Patients</span>
+        </button>
+        <button class="tab-button" data-section="doctor" onclick="showSection('doctor')">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            <span>Doctors</span>
+        </button>
+        <button class="tab-button" data-section="bill" onclick="showSection('bill')">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            <span>Bills</span>
+        </button>
+        <button class="tab-button" data-section="admission" onclick="showSection('admission')">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Admissions</span>
+        </button>
+        {% if current_user.role == 'admin' %}
+        <button class="tab-button" data-section="master" onclick="showSection('master')">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Master View</span>
+        </button>
+        {% endif %}
     </div>
 
     <div id="patient-section" class="form-box">
         <h3>Add New Patient</h3>
         <form action="/submit_patient" method="POST">
-            <label>First Name:</label> <input type="text" name="first_name" placeholder="Ex: Tony" required>
-            <label>Last Name:</label> <input type="text" name="last_name" placeholder="Ex: Stark" required>
-            <label>Date of Birth:</label> <input type="date" name="dob" required>
-            <label>Address:</label> <input type="text" name="address" placeholder="Ex: 10880 Malibu Point" required>
-            <label>Phone Number:</label> <input type="text" name="phone" placeholder="Ex: 555-0199" required>
-            <button type="submit" class="btn-primary">Register Patient</button>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" name="first_name" placeholder="Tony" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" name="last_name" placeholder="Stark" required>
+                </div>
+            </div>
+
+            <label>Date of Birth</label>
+            <input type="date" name="dob" required>
+
+            <label>Address</label>
+            <input type="text" name="address" placeholder="10880 Malibu Point" required>
+
+            <label>Phone Number</label>
+            <input type="text" name="phone" placeholder="555-0199" required>
+
+            <button type="submit" class="btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                Register Patient
+            </button>
         </form>
 
         <form action="/get_patients" method="GET">
-            <button type="submit" class="btn-success">View All Patients</button>
+            <button type="submit" class="btn-success">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                View All Patients (0)
+            </button>
         </form>
 
         <div class="delete-section">
-            <h4 style="color: #dc3545; margin-bottom: 5px;">Remove Patient</h4>
+            <h4>Remove Patient</h4>
             <form action="/delete_patient" method="POST" class="delete-input-group">
-                <input type="number" name="delete_id" placeholder="ID to delete" style="flex: 1;" required>
-                <button type="submit" class="btn-danger">Delete</button>
+                <div style="flex: 1;">
+                    <label style="margin-top: 0;">Patient ID</label>
+                    <input type="number" name="delete_id" placeholder="Enter ID" required>
+                </div>
+                <button type="submit" class="btn-danger">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
             </form>
         </div>
     </div>
+
     <div id="admission-section" class="form-box">
         <h3>New Admission</h3>
         <form action="/submit_admission" method="POST">
-            <label>Patient ID:</label> 
+            <label>Patient ID</label>
             <input type="number" name="patient_id" placeholder="ID from Patient List" required>
-            
-            <label>Diagnosis:</label> 
-            <input type="text" name="diagnosis" placeholder="Ex: Viral Fever" required>
-            
-            <label>Expected Discharge Date (Optional):</label> 
+
+            <label>Diagnosis</label>
+            <input type="text" name="diagnosis" placeholder="Viral Fever" required>
+
+            <label>Expected Discharge Date (Optional)</label>
             <input type="date" name="discharge_date">
-            
-            <button type="submit" class="btn-primary">Admit Patient</button>
+
+            <button type="submit" class="btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Admit Patient
+            </button>
         </form>
 
         <form action="/get_admissions" method="GET">
-            <button type="submit" class="btn-success">View All Admissions</button>
+            <button type="submit" class="btn-success">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                View All Admissions (0)
+            </button>
         </form>
     </div>
 
     <div id="doctor-section" class="form-box">
         <h3>Add New Doctor</h3>
         <form action="/submit_doctor" method="POST">
-            <label>Doctor Name:</label> <input type="text" name="doc_name" placeholder="Ex: Dr. Stephen Strange" required>
-            <label>Specialization:</label> <input type="text" name="specialization" placeholder="Ex: Neurosurgery" required>
-            <button type="submit" class="btn-primary">Register Doctor</button>
+            <label>Doctor Name</label>
+            <input type="text" name="doc_name" placeholder="Dr. Stephen Strange" required>
+
+            <label>Specialization</label>
+            <input type="text" name="specialization" placeholder="Neurosurgery" required>
+
+            <button type="submit" class="btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="19" y1="8" x2="19" y2="14"></line>
+                    <line x1="22" y1="11" x2="16" y2="11"></line>
+                </svg>
+                Register Doctor
+            </button>
         </form>
 
         <form action="/get_doctors" method="GET">
-            <button type="submit" class="btn-success">View All Doctors</button>
+            <button type="submit" class="btn-success">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                View All Doctors (0)
+            </button>
         </form>
-        
+
         <div class="delete-section">
-            <h4 style="color: #dc3545; margin-bottom: 5px;">Remove Doctor</h4>
+            <h4>Remove Doctor</h4>
             <form action="/delete_doctor" method="POST" class="delete-input-group">
-                <input type="number" name="delete_id" placeholder="ID to delete" style="flex: 1;" required>
-                <button type="submit" class="btn-danger">Delete</button>
+                <div style="flex: 1;">
+                    <label style="margin-top: 0;">Doctor ID</label>
+                    <input type="number" name="delete_id" placeholder="Enter ID" required>
+                </div>
+                <button type="submit" class="btn-danger">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
             </form>
         </div>
     </div>
-    
 
     <div id="bill-section" class="form-box">
         <h3>Create New Bill</h3>
         <form action="/submit_bill" method="POST">
-            <label>Patient ID:</label> <input type="number" name="patient_id" placeholder="Check Patient list for ID" required>
-            <label>Amount ($):</label> <input type="number" name="amount" placeholder="0.00" step="0.01" required>
-            <label>Status:</label> 
+            <label>Patient ID</label>
+            <input type="number" name="patient_id" placeholder="Check Patient list for ID" required>
+
+            <label>Amount ($)</label>
+            <input type="number" name="amount" placeholder="0.00" step="0.01" required>
+
+            <label>Status</label>
             <select name="status">
                 <option value="Unpaid">Unpaid</option>
                 <option value="Paid">Paid</option>
             </select>
-            <button type="submit" class="btn-primary">Generate Bill</button>
+
+            <button type="submit" class="btn-primary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                Generate Bill
+            </button>
         </form>
 
         <form action="/get_bills" method="GET">
-            <button type="submit" class="btn-success">View All Bills</button>
+            <button type="submit" class="btn-success">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                View All Bills (0)
+            </button>
         </form>
 
-        <div class="delete-section" style="border-color: #007bff;">
-            <h4 style="color: #007bff; margin-bottom: 5px;">Update Bill Status</h4>
+        <div class="delete-section">
+            <h4 style="color: var(--info);">Update Bill Status</h4>
             <form action="/update_bill" method="POST" class="delete-input-group">
-                <input type="number" name="bill_id" placeholder="Bill ID" style="flex: 1;" required>
-                <select name="new_status" style="flex: 1; margin: 0;">
-                    <option value="Paid">Paid</option>
-                    <option value="Unpaid">Unpaid</option>
-                </select>
-                <button type="submit" class="btn-primary" style="width: auto; margin: 0; background-color: #007bff;">Update</button>
+                <div style="flex: 1;">
+                    <label style="margin-top: 0;">Bill ID</label>
+                    <input type="number" name="bill_id" placeholder="Enter Bill ID" required>
+                </div>
+                <div style="flex: 1;">
+                    <label style="margin-top: 0;">New Status</label>
+                    <select name="new_status">
+                        <option value="Paid">Paid</option>
+                        <option value="Unpaid">Unpaid</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="width: auto; margin: 0; background: var(--info);">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </button>
             </form>
         </div>
     </div>
+    <div id="master-section" class="form-box">
+        <h3>System Overview</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+            View comprehensive records or run advanced SQL analytics reports.
+        </p>
+
+        <form action="/get_master_view" method="GET" style="margin-bottom: 15px;">
+            <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Fetch All Records
+            </button>
+        </form>
+
+        <form action="/advanced_reports" method="GET">
+            <button type="submit" class="btn-primary" style="background: linear-gradient(135deg, #ed64a6 0%, #d53f8c 100%);">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Run Advanced Analytics Report
+            </button>
+        </form>
+    </div>
 
     <div class="output-area">
-        <label style="color: #ccc; font-size: 12px; margin: 0;">SYSTEM LOG:</label>
+        <label>System Log</label>
         <textarea readonly>{{ msg }}</textarea>
     </div>
 

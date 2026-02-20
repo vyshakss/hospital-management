@@ -1,13 +1,63 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request,redirect, url_for
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 import oracledb
 app=Flask(__name__)
+app.secret_key='super_secret_key'
+#LOGIN SETUP
+login_manager=LoginManager()
+login_manager.init_app(app)
+login_manager.login_view='login'
+class User(UserMixin):
+   def __init__(self,username,role):
+      self.id=username
+      self.role = role
+@login_manager.user_loader
+def load_user(username):
+    conn = getconn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, role FROM app_users WHERE username=:1", [username])
+    res = cursor.fetchone()
+    conn.close()
+    if res:
+        return User(res[0],res[1]) # Create user with Role
+    return None
 def getconn():
  return oracledb.connect(user="system", password="mypassword", dsn="localhost:1521/XE")
+# --- 3. LOGIN ROUTES ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        conn = getconn()
+        cursor = conn.cursor()
+        # Check if username/password match in DB
+        cursor.execute("SELECT username, role FROM app_users WHERE username=:1 AND password=:2", [username, password])
+        user_data = cursor.fetchone()
+        conn.close()
+        
+        if user_data:
+            # user_data[0] is username, user_data[1] is role
+            user_obj = User(user_data[0], user_data[1])
+            login_user(user_obj)
+            return redirect(url_for('home'))
+        else:
+            return render_template('login.html', error="Invalid Username or Password")
+
+    return render_template('login.html')
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 @app.route('/')
+@login_required
 def home():
   return render_template('index.html')
 #PATIENT ROUTES
 @app.route('/submit_patient', methods=['POST'])
+@login_required
 def submit_patient():
   fname_input=request.form.get('first_name')
   lname_input=request.form.get('last_name')
@@ -29,6 +79,7 @@ def submit_patient():
   except oracledb.Error as e:
     return f"<h1>Error!</h1> <p>{e}</p>"
 @app.route('/get_patients',methods=['GET']) 
+@login_required
 def get_patient():
  try:
   conn = oracledb.connect(user="system", password="mypassword", dsn="localhost:1521/XE")
@@ -47,6 +98,7 @@ def get_patient():
  except oracledb.Error as e:
         return render_template('index.html', msg=f"Error: {e}")
 @app.route('/delete_patient',methods=['POST'])
+@login_required
 def delete_patient():
  try:
   conn=getconn()
@@ -66,6 +118,7 @@ def delete_patient():
   return render_template('index.html', msg=f"Error: Cannot delete. {e}", mode="patient")
 #DOCTOR ROUTES
 @app.route('/submit_doctor',methods=['POST'])
+@login_required
 def submit_doctor():
  try:
   conn=getconn()
@@ -81,6 +134,7 @@ def submit_doctor():
  except oracledb.Error as e:
     return f"<h1>Error!</h1> <p>{e}</p>"
 @app.route('/get_doctors',methods=['GET'])
+@login_required
 def get_doctor():
  try:
   conn = oracledb.connect(user="system", password="mypassword", dsn="localhost:1521/XE")
@@ -99,6 +153,7 @@ def get_doctor():
  except oracledb.Error as e:
         return render_template('index.html', msg=f"Error: {e}")
 @app.route('/delete_doctor',methods=['POST'])
+@login_required
 def delete_doctors():
   try:
 
@@ -117,26 +172,33 @@ def delete_doctors():
   except Exception as e:
    return render_template('index.html', msg=f"Error: Cannot delete. {e}", mode="patient")
 ###BILLING ROUTES###
-@app.route('/submit_bill',methods=['POST'])
+
+@app.route('/submit_bill', methods=['POST'])
+@login_required
 def submit_bill():
-  try:
-      conn=getconn()
-      cursor=conn.cursor()
-      pid=request.form.get('patient_id')
-      amt=request.form.get('amount')
-      stat=request.form.get('status')
-      sql = """
-            INSERT INTO bills (patient_id, amount, status, bill_date) 
-            VALUES (:1, :2, :3, CURRENT_DATE)
-        """
-      cursor.execute(sql,[pid,amt,stat])
-      conn.commit()
-      cursor.close()
-      conn.close()
-      return f"<h1>Success! added bill: {pid}</h1> <a href='/'>Go Back</a>"
-  except Exception as e:
-   return render_template('index.html', msg=f"Error: {e}", mode="bill")
+    try:
+        conn = getconn()
+        cursor = conn.cursor()
+        
+        # TCL: SAVEPOINT (Optional, marks a spot to save)
+        cursor.execute("SAVEPOINT start_transaction")
+
+        sql = "INSERT INTO bills (patient_id, amount, status, bill_date) VALUES (:1, :2, :3, CURRENT_DATE)"
+        cursor.execute(sql, [request.form.get('patient_id'), request.form.get('amount'), request.form.get('status')])
+        
+        # TCL: COMMIT (Saves data permanently)
+        conn.commit() 
+        conn.close()
+        return render_template('index.html', msg="Success! Bill Created.", mode="bill")
+        
+    except Exception as e:
+        # TCL: ROLLBACK (Undoes changes if error occurs)
+        if 'conn' in locals():
+            conn.rollback() 
+            conn.close()
+        return render_template('index.html', msg=f"Transaction Failed & Rolled Back: {e}", mode="bill")
 @app.route('/get_bills',methods=['GET'])
+@login_required
 def get_bill():
  try:
   conn = getconn()
@@ -154,6 +216,7 @@ def get_bill():
  except oracledb.Error as e:
         return render_template('index.html', msg=f"Error: {e}")
 @app.route('/update_bill',methods=['POST'])
+@login_required
 def update_bill():
  try:
    conn=getconn()
@@ -169,6 +232,7 @@ def update_bill():
    return render_template('index.html', msg=f"Error: {e}", mode="bill")
 ##ADMISSSION ROUTES##
 @app.route('/submit_admission',methods=['POST'])
+@login_required
 def submit_admission():
    try:
       conn=getconn()
@@ -185,6 +249,7 @@ def submit_admission():
      return render_template('index.html', msg=f"Error: {e}", mode="bill")
 
 @app.route('/get_admissions',methods=['GET'])
+@login_required
 def get_admision():
    try:
       conn=getconn()
@@ -202,8 +267,103 @@ def get_admision():
       return render_template('index.html', msg=display_text,mode="admission")
    except oracledb.Error as e:
         return render_template('index.html', msg=f"Error: {e}", mode="admission")
-      
+@app.route('/advanced_reports', methods=['GET'])
+@login_required
+def advanced_reports():
+    if current_user.role != 'admin':
+        return render_template('index.html', msg="⛔ ACCESS DENIED.", mode="patient")
+    
+    try:
+        conn = getconn()
+        cursor = conn.cursor()
 
+        # THIS QUERY COVERS:
+        # Aggregates: COUNT, SUM, AVG, MAX, MIN
+        # String Funcs: UPPER, LOWER, SUBSTR, LENGTH, CONCAT (||)
+        # Date Funcs: EXTRACT, SYSDATE
+        # Clauses: WHERE, GROUP BY, HAVING, ORDER BY, LIKE
+        
+        sql = """
+            SELECT 
+                UPPER(p.first_name) || ' ' || LOWER(p.last_name) AS formatted_name,
+                LENGTH(p.address) as addr_len,
+                COUNT(b.bill_id) as total_bills,
+                NVL(SUM(b.amount), 0) as total_spent,
+                ROUND(AVG(b.amount), 2) as avg_spent,
+                MAX(b.amount) as max_bill,
+                MIN(b.amount) as min_bill,
+                EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM p.dob) as calc_age
+            FROM patients p
+            LEFT JOIN bills b ON p.patient_id = b.patient_id
+            WHERE p.address LIKE '%Street%' OR p.address LIKE '%Road%' 
+            GROUP BY p.first_name, p.last_name, p.address, p.dob
+            HAVING COUNT(b.bill_id) >= 0
+            ORDER BY total_spent DESC
+        """
+        
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+        
+        report_text = "--- 📊 COMPLEX SQL ANALYTICS REPORT ---\n"
+        report_text += "(Demonstrates: Aggregates, String/Date Funcs, Joins, Group By)\n\n"
+        
+        for r in rows:
+            report_text += f"Patient: {r[0]} (Len: {r[1]}) | Age: {r[7]}\n"
+            report_text += f"Bills: {r[2]} | Total: ${r[3]} | Avg: ${r[4]} | Max: ${r[5]} | Min: ${r[6]}\n"
+            report_text += "-" * 40 + "\n"
+
+        conn.close()
+        return render_template('index.html', msg=report_text, mode="master")
+
+    except Exception as e:
+        return render_template('index.html', msg=f"Error: {e}", mode="master")
+# ==========================================
+#           MASTER VIEW ROUTE
+# ==========================================
+@app.route('/get_master_view', methods=['GET'])
+@login_required
+def get_master_view():
+    # 1. SECURITY CHECK: Only Admins allowed
+    if current_user.role != 'admin':
+        return render_template('index.html', msg="⛔ ACCESS DENIED: You do not have permission to view Master Records.", mode="patient")
+
+    try:
+        conn = getconn()
+        cursor = conn.cursor()
+        
+        # --- PART A: FETCH PATIENTS ---
+        cursor.execute("SELECT patient_id, first_name, last_name FROM patients ORDER BY patient_id")
+        patients = cursor.fetchall()
+        
+        # --- PART B: FETCH DOCTORS ---
+        cursor.execute("SELECT doctor_id, name, specialization FROM doctors ORDER BY doctor_id")
+        doctors = cursor.fetchall()
+
+        # --- PART C: FETCH BILLS ---
+        cursor.execute("SELECT bill_id, amount, status FROM bills ORDER BY bill_id")
+        bills = cursor.fetchall()
+        
+        conn.close()
+
+        # --- BUILD THE REPORT STRING ---
+        display_text = "=== 🏥 HOSPITAL MASTER RECORDS ===\n\n"
+        
+        display_text += f"--- PATIENTS ({len(patients)} Total) ---\n"
+        for p in patients:
+            display_text += f"ID: {p[0]} | Name: {p[1]} {p[2]}\n"
+        
+        display_text += f"\n--- DOCTORS ({len(doctors)} Total) ---\n"
+        for d in doctors:
+            display_text += f"ID: {d[0]} | Dr. {d[1]} ({d[2]})\n"
+            
+        display_text += f"\n--- BILLS ({len(bills)} Total) ---\n"
+        for b in bills:
+            display_text += f"ID: {b[0]} | Amt: ${b[1]} | Status: {b[2]}\n"
+
+        return render_template('index.html', msg=display_text, mode="master")
+
+    except Exception as e:
+        return render_template('index.html', msg=f"System Error: {e}", mode="master")
 
 
      
